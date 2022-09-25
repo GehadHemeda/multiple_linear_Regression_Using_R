@@ -35,7 +35,7 @@ Identifying Potential Predictors usig stepwise procedure
   ****
   The algorithm keeps on going until no variable can be added or excluded.
 
-finally, i analysed the residuals of the field model and found this model is valid for forecasting.
+finally, i analysed the residuals of the fitted model and found this model is valid for forecasting.
 
 
 
