@@ -1,0 +1,91 @@
+#import data into R
+LungCapData= read.table(file.choose(), header=T, sep="\t")
+
+# attach the data into memory(make it global)
+attach(LungCapData)
+
+#show dataset
+head(LungCapData)
+
+#summary statistics
+summary(LungCapData)
+
+#convert character variable into factors
+Smoke=as.factor(Smoke)              
+Gender=as.factor(Gender)         
+Caesarean =as.factor(Caesarean)
+
+#levels of each factor
+levels(Gender)
+levels(Smoke )
+levels(Caesarean )
+
+#create dummy variables
+Gender_d=ifelse(Gender == "male", 1, 0)
+Smoke_d =ifelse(Smoke=="yes",1,0)
+Caesarean_d =ifelse(Caesarean=="yes",1,0)
+
+LungCapData= cbind(LungCapData,Gender_d)
+LungCapData= cbind(LungCapData,Smoke_d)
+LungCapData= cbind(LungCapData,Caesarean_d)
+head(LungCapData)
+
+#drop Smoke, Gender, and Cesarean cols
+NewLungCap = subset(LungCapData, select = -c(Smoke ,Gender,Caesarean) )
+head(NewLungCap)
+
+#EDA---Visualizing the Relationships in the Data
+pairs(NewLungCap, gap=0.5)
+
+#EDA---(cont.)
+#at first, install ggplot2 package to visualize the data set 
+library(ggplot2) #load it in ur workspace
+
+par(mfrow = c(1, 3)) #how many images can be shown in your panel plots?!
+boxplot(LungCap, main='LungCap',col='Sky Blue')
+boxplot(Age, main='Age',col='Sky Blue')
+boxplot(Height, main='Height',col='Sky Blue')
+
+par(mfrow=c(1,3))
+hist(LungCap, col='red')
+hist(Age, col='red')
+hist(Height, col='red')
+
+df1= subset(LungCapData, select = c(LungCap ,Smoke, Gender) )
+attach(df1)
+# make stacked bar plot
+ggplot(df1, aes(x = Smoke, fill = Gender)) + 
+  geom_bar()
+
+#*******************************************************
+#Stepwise Linear Regression--- identify Potential predictors(X's)
+library(olsrr)
+model <- LungCap ~.
+fit <- lm(model, NewLungCap)
+ols_step_both_p(fit, pent = 0.1, prem = 0.3, details = FALSE)
+stp_s <-ols_step_both_p(fit, details=TRUE)
+
+#********************************************************
+#Check assumptions
+#1)Check outliers and high Leverage points:
+library(outliers)
+ols_plot_resid_lev(fit)
+
+#2) Check Normality:
+shapiro.test(residuals(fit))
+
+#3) Check Homoscedasticity:
+library(lmtest)
+lmtest::bptest(fit) #studentized Breusch-Pagan test
+
+#4) Check Linearity:
+plot(fit,1)
+
+#5)Check autocorrelation (Violations of independence)
+acf(residuals.lm(fit), lag.max = 15, plot = TRUE)
+
+#6) Check multicollinearity :
+library(car)
+vif(fit)   #vif <5 no problem
+#********************************************************
+#thank:) you
